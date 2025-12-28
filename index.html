@@ -115,13 +115,19 @@
       <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Alucra,%20Giresun" class="btn">⚠️ Akış çalışmıyor?</a>
     </div>
 
-    <!-- 2. Zara, Sivas (m3u8) -->
-    <div class="camera">
-      <h3>📡 Zara, Sivas</h3>
-      <small>HLS Akışı</small>
-      <video id="zara-video" muted controls></video>
-      <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Zara,%20Sivas" class="btn">⚠️ Akış çalışmıyor?</a>
-    </div>
+<!-- Zara, Sivas — iframe ile -->
+<div class="camera">
+  <h3>📡 Zara, Sivas</h3>
+  <small>Dörtyol Kamerası — iframe yöntemi</small>
+  <iframe 
+    src="https://server.arvas.com.tr/dortyol.html" 
+    frameborder="0" 
+    allowfullscreen
+    width="100%" 
+    height="250">
+  </iframe>
+  <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Zara,%20Sivas" class="btn">⚠️ Akış çalışmıyor?</a>
+</div>
 
     <!-- 3. Balmumcu, İstanbul (JPG) -->
     <div class="camera">
