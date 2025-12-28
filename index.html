@@ -1,6 +1,14 @@
 <!DOCTYPE html>
 <html lang="tr">
-<head>
+<head><script>
+  // 🛡️ Basit şifre koruması — sadece senin bilmen gerekiyor
+  const correctPass = "kamera2025";
+  const input = prompt("🔐 Kapalı beta şifresi?");
+  if (input !== correctPass) {
+    alert("❌ Yanlış şifre. Erişim reddedildi.");
+    window.location.href = "about:blank";
+  }
+</script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>🇹🇷 Canlı Kameralar (Beta)</title>
