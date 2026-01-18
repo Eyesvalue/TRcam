@@ -1,227 +1,74 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🇹🇷 Canlı Kameralar (Beta)</title>
-  
-  <!-- HLS.js - m3u8 akışları için -->
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  
-  <!-- Şifre koruması -->
-  <script>
-    const correctPass = "kamera2025";
-    const input = prompt("🔐 Kapalı beta şifresi?");
-    if (input !== correctPass) {
-      alert("❌ Yanlış şifre. Erişim reddedildi.");
-      window.location.href = "about:blank";
-    }
-  </script>
-<div id="map" style="height: 500px; width: 100%;"></div>
-  <style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TR Canlı Kameralar - Harita</title>
+    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #0f0f0f;
-      color: #f0f0f0;
-      padding: 1rem;
-      line-height: 1.5;
-    }
-    header {
-      text-align: center;
-      margin-bottom: 1.5rem;
-      padding: 1rem 0;
-    }
-    h1 { font-size: 1.5rem; }
-    .info { font-size: 0.85rem; color: #aaa; }
-    
-    .camera-grid {
-      display: grid;
-      grid-template-columns: 1fr;
-      gap: 1.2rem;
-    }
-    @media (min-width: 768px) {
-      .camera-grid { grid-template-columns: 1fr 1fr; }
-    }
-
-    .camera {
-      background: #1a1a1a;
-      border-radius: 8px;
-      overflow: hidden;
-      padding: 0.75rem;
-    }
-    .camera h3 {
-      font-size: 1.1rem;
-      margin-bottom: 0.5rem;
-      color: #fff;
-    }
-    .camera small {
-      display: block;
-      font-size: 0.8rem;
-      color: #888;
-      margin-bottom: 0.5rem;
-    }
-    .camera iframe,
-    .camera video,
-    .camera img {
-      width: 100%;
-      height: auto;
-      aspect-ratio: 16/9;
-      background: #000;
-      border-radius: 4px;
-      display: block;
-    }
-    .camera video { height: 200px; }
-
-    .btn {
-      display: inline-block;
-      background: #333;
-      color: #ff6b6b;
-      text-decoration: none;
-      padding: 0.3rem 0.6rem;
-      border-radius: 4px;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-    .btn:hover { background: #444; }
-
-    footer {
-      margin-top: 2rem;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #666;
-    }
-  </style>
+    <style>
+        body { font-family: sans-serif; margin: 0; background: #121212; color: white; }
+        #map { height: 600px; width: 100%; border-bottom: 2px solid #333; }
+        .info { padding: 20px; text-align: center; }
+        .leaflet-popup-content { color: #000; }
+    </style>
 </head>
-  <script>
-  // Supabase Bilgileriniz
-  const SUPABASE_URL = 'PROJE_URL_ADRESI';
-  const SUPABASE_KEY = 'ANON_KEY_SIFREN';
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  // Haritayı Türkiye'ye odaklı başlat
-  var map = L.map('map').setView([39.0, 35.0], 6);
-
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap'
-  }).addTo(map);
-
-  // Verileri çek ve işaretçileri ekle
-  async function kameralariYukle() {
-    const { data, error } = await supabase.from('Kameralar').select('*');
-    
-    if (data) {
-      data.forEach(kamera => {
-        L.marker([kamera.lat, kamera.lng])
-          .addTo(map)
-          .bindPopup(`
-            <b>${kamera.kamera_adi}</b><br>
-            <img src="${kamera.snapshot_url || ''}" width="150"><br>
-            <a href="${kamera.stream_url}" target="_blank">Canlı İzle</a>
-          `);
-      });
-    }
-  }
-
-  kameralariYukle();
-</script>
 <body>
 
-  <header>
-    <h1>🇹🇷 Türkiye Canlı Kameralar</h1>
-    <p class="info">🔹 Kapalı beta — sadece test amaçlı</p>
-  </header>
-
-  <main class="camera-grid">
-
-    <!-- 1. Alucra, Giresun (YouTube) -->
-    <div class="camera">
-      <h3>📹 Alucra, Giresun</h3>
-      <small>YouTube Canlı Yayın</small>
-      <iframe 
-        src="https://www.youtube.com/embed/fF7HfnTVXmc?autoplay=1&mute=1" 
-        frameborder="0" 
-        allow="autoplay; encrypted-media" 
-        allowfullscreen>
-      </iframe>
-      <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Alucra,%20Giresun" class="btn">⚠️ Akış çalışmıyor?</a>
+    <div class="info">
+        <h1>TR Canlı Kameralar</h1>
+        <p>Supabase Veritabanından Canlı Veriler</p>
     </div>
 
-<!-- Zara, Sivas — iframe ile -->
-<div class="camera">
-  <h3>📡 Zara, Sivas</h3>
-  <small>Dörtyol Kamerası — iframe yöntemi</small>
-  <iframe 
-    src="https://server.arvas.com.tr/dortyol.html" 
-    frameborder="0" 
-    allowfullscreen
-    width="100%" 
-    height="250">
-  </iframe>
-  <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Zara,%20Sivas" class="btn">⚠️ Akış çalışmıyor?</a>
-</div>
+    <div id="map"></div>
 
-    <!-- 3. Balmumcu, İstanbul (JPG) -->
-    <div class="camera">
-      <h3>📸 Balmumcu, İstanbul</h3>
-      <small>ENKA — Anlık Kare</small>
-      <img id="balmumcu-img" src="https://w.enka.com/camhd/cam1/c.jpg" alt="Balmumcu">
-      <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Balmumcu,%20İstanbul" class="btn">⚠️ Akış çalışmıyor?</a>
-    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    <!-- 4. Yozgat (m3u8 — link) -->
-    <div class="camera">
-      <h3>⚠️ Yozgat (Test Gerekli)</h3>
-      <small>Şehir Merkezi — m3u8</small>
-      <p style="color:#ddd; font-size:0.9rem;">
-        Güvenlik nedeniyle doğrudan web’de çalışmayabilir.<br>
-        <a href="https://cdn-ipkamera.yayin.com.tr/yozgatbel/nohutlu/chunklist_w2076661964.m3u8" target="_blank" class="btn">▶️ VLC ile Aç</a>
-      </p>
-      <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Yozgat" class="btn">⚠️ Akış çalışmıyor?</a>
-    </div>
+    <script>
+        // BURAYI KENDİ BİLGİLERİNLE DOLDUR
+        const SUPABASE_URL = 'SENİN_SUPABASE_URL_ADRESİN';
+        const SUPABASE_KEY = 'SENİN_ANON_KEY_ŞİFREN';
 
-    <!-- 5. Levent, İstanbul (JPG) -->
-    <div class="camera">
-      <h3>🌤️ Levent, İstanbul</h3>
-      <small>YKS — Hava Durumu Kamerası</small>
-      <img id="levent-img" src="https://yksweb.yks.com.tr/weather/CameraPhoto/Camera1.jpg" alt="Levent">
-      <a href="mailto:?subject=Akış%20Hatasi&body=Kamera:%20Levent,%20İstanbul" class="btn">⚠️ Akış çalışmıyor?</a>
-    </div>
+        // Supabase Bağlantısını Başlat
+        const { createClient } = supabase;
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  </main>
+        // Haritayı Türkiye'ye Odakla
+        var map = L.map('map').setView([39.0, 35.0], 6);
 
-  <footer>
-    <p>📍 Kaynaklar: YouTube, ENKA, YKS, İlgili Kurumlar | 🛠️ Beta v0.2</p>
-  </footer>
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
 
-  <script>
-    // Zara HLS akışı
-    const zaraUrl = 'https://server.arvas.com.tr/dortyol.m3u8';
-    const zaraVideo = document.getElementById('zara-video');
-    if (Hls.isSupported()) {
-      const hls = new Hls();
-      hls.loadSource(zaraUrl);
-      hls.attachMedia(zaraVideo);
-    } else if (zaraVideo.canPlayType('application/vnd.apple.mpegurl')) {
-      zaraVideo.src = zaraUrl;
-    }
+        // Verileri Supabase'den Çek ve Haritaya Ekle
+        async function kameralariHaritayaDok() {
+            try {
+                // 'Kameralar' tablo isminin Supabase ile aynı olduğundan emin ol
+                const { data, error } = await supabaseClient.from('Kameralar').select('*');
+                
+                if (error) throw error;
 
-    // JPG kameraları otomatik yenile
-    function refreshImage(id, url, interval = 5000) {
-      const img = document.getElementById(id);
-      if (!img) return;
-      setInterval(() => {
-        img.src = `${url}?_t=${Date.now()}`;
-      }, interval);
-    }
+                if (data) {
+                    data.forEach(kamera => {
+                        // Haritaya işaretçi ekle
+                        L.marker([kamera.lat, kamera.lng]).addTo(map)
+                            .bindPopup(`
+                                <div style="text-align:center">
+                                    <b>${kamera.kamera_adi}</b><br>
+                                    <img src="${kamera.snapshot_url || 'https://via.placeholder.com/150'}" width="150" style="margin:5px 0"><br>
+                                    <a href="${kamera.stream_url}" target="_blank">Canlı Yayına Git</a>
+                                </div>
+                            `);
+                    });
+                }
+            } catch (err) {
+                console.error("Hata oluştu:", err.message);
+                alert("Veriler çekilemedi, konsolu kontrol et.");
+            }
+        }
 
-    refreshImage('balmumcu-img', 'https://w.enka.com/camhd/cam1/c.jpg');
-    refreshImage('levent-img', 'https://yksweb.yks.com.tr/weather/CameraPhoto/Camera1.jpg');
-  </script>
-
+        kameralariHaritayaDok();
+    </script>
 </body>
 </html>
