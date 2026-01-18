@@ -17,8 +17,12 @@
       window.location.href = "about:blank";
     }
   </script>
-
+<div id="map" style="height: 500px; width: 100%;"></div>
   <style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, sans-serif;
@@ -93,6 +97,38 @@
     }
   </style>
 </head>
+  <script>
+  // Supabase Bilgileriniz
+  const SUPABASE_URL = 'PROJE_URL_ADRESI';
+  const SUPABASE_KEY = 'ANON_KEY_SIFREN';
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // Haritayı Türkiye'ye odaklı başlat
+  var map = L.map('map').setView([39.0, 35.0], 6);
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // Verileri çek ve işaretçileri ekle
+  async function kameralariYukle() {
+    const { data, error } = await supabase.from('Kameralar').select('*');
+    
+    if (data) {
+      data.forEach(kamera => {
+        L.marker([kamera.lat, kamera.lng])
+          .addTo(map)
+          .bindPopup(`
+            <b>${kamera.kamera_adi}</b><br>
+            <img src="${kamera.snapshot_url || ''}" width="150"><br>
+            <a href="${kamera.stream_url}" target="_blank">Canlı İzle</a>
+          `);
+      });
+    }
+  }
+
+  kameralariYukle();
+</script>
 <body>
 
   <header>
