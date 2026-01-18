@@ -1,4 +1,28 @@
 <!DOCTYPE html>
+<script>
+    // 1. BASİT GİRİŞ ŞİFRESİ
+    const sifre = "kamera2025"; // Burayı kendi şifrenle değiştir
+    let girilen = prompt("Lütfen giriş şifresini yazın:");
+
+    if (girilen !== sifre) {
+        alert("Hatalı şifre!");
+        document.body.innerHTML = "<h1>Erişim Reddedildi.</h1>";
+        window.stop(); // Sayfanın geri kalanını yüklemeyi durdurur
+    }
+
+    // ... Supabase bağlantı kodların burada kalacak ...
+
+    // 2. LİNK MASKELEME FONKSİYONU
+    // Bu fonksiyon, linkin çalınmasını zorlaştırır.
+    function yayiniAc(id) {
+        // Kullanıcı linki sağ tıklayıp kopyalayamaz, çünkü link DOM'da doğrudan yok.
+        // Veriyi o an Supabase'den veya hafızadaki listeden bulup açarız.
+        const kamera = kameralarListesi.find(k => k.id === id);
+        if (kamera && kamera.stream_url) {
+            window.open(kamera.stream_url, '_blank');
+        }
+    }
+</script>
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
