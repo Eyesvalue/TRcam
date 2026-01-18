@@ -3,22 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TR Canlı Kameralar - Harita</title>
-    
+    <title>TR Canlı Kameralar - Koyu Harita</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         body { font-family: sans-serif; margin: 0; background: #121212; color: white; }
-        #map { height: 600px; width: 100%; border-bottom: 2px solid #333; }
-        .info { padding: 20px; text-align: center; }
+        #map { height: 100vh; width: 100%; } /* Tam ekran koyu harita */
         .leaflet-popup-content { color: #000; }
     </style>
 </head>
 <body>
-
-    <div class="info">
-        <h1>TR Canlı Kameralar</h1>
-        <p>Supabase Veritabanından Canlı Veriler</p>
-    </div>
 
     <div id="map"></div>
 
@@ -26,49 +19,58 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // BURAYI KENDİ BİLGİLERİNLE DOLDUR
+        // BURAYI SUPABASE'DEN ALDIĞIN BİLGİLERLE DOLDUR
         const SUPABASE_URL = 'https://egrvojzmrykairbglqjq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncnZvanptcnlrYWlyYmdscWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDgyNDcsImV4cCI6MjA4NDI4NDI0N30.sbIKNJcVlEGlVOgb_gBagP-Nn1NtBMKOlRzJmhH5TSM';
 
-        // Supabase Bağlantısını Başlat
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Haritayı Türkiye'ye Odakla
+        // KOYU TEMA HARİTA BAŞLATMA
         var map = L.map('map').setView([39.0, 35.0], 6);
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
+        // CartoDB Dark Matter (Koyu Tema)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; OpenStreetMap &copy; CARTO'
         }).addTo(map);
 
-        // Verileri Supabase'den Çek ve Haritaya Ekle
-        async function kameralariHaritayaDok() {
+        async function verileriYukle() {
             try {
-                // 'Kameralar' tablo isminin Supabase ile aynı olduğundan emin ol
+                // Tablo isminiz 'Kameralar' (K harfi büyük) ise tam böyle yazın
                 const { data, error } = await supabaseClient.from('Kameralar').select('*');
                 
-                if (error) throw error;
+                if (error) {
+                    console.error("Supabase Hatası:", error.message);
+                    return;
+                }
 
-                if (data) {
+                if (data && data.length > 0) {
                     data.forEach(kamera => {
-                        // Haritaya işaretçi ekle
-                        L.marker([kamera.lat, kamera.lng]).addTo(map)
-                            .bindPopup(`
-                                <div style="text-align:center">
-                                    <b>${kamera.kamera_adi}</b><br>
-                                    <img src="${kamera.snapshot_url || 'https://via.placeholder.com/150'}" width="150" style="margin:5px 0"><br>
-                                    <a href="${kamera.stream_url}" target="_blank">Canlı Yayına Git</a>
-                                </div>
-                            `);
+                        // Sütun isimlerini tablodaki gibi tam eşleşecek şekilde güncelledik
+                        const ad = kamera['kamera adı'];
+                        const lat = kamera['Enlem - koordinat için'];
+                        const lng = kamera['Boylam - koordinat için'];
+                        const img = kamera['snapshot_url'];
+                        const stream = kamera['stream_url'];
+
+                        if (lat && lng) {
+                            L.marker([lat, lng]).addTo(map)
+                                .bindPopup(`
+                                    <div style="text-align:center">
+                                        <b>${ad || 'Kamera'}</b><br>
+                                        <img src="${img || 'https://via.placeholder.com/150'}" width="150" style="margin:5px 0"><br>
+                                        <a href="${stream}" target="_blank">Canlı İzle</a>
+                                    </div>
+                                `);
+                        }
                     });
                 }
             } catch (err) {
-                console.error("Hata oluştu:", err.message);
-                alert("Veriler çekilemedi, konsolu kontrol et.");
+                console.error("Hata:", err);
             }
         }
 
-        kameralariHaritayaDok();
+        verileriYukle();
     </script>
 </body>
 </html>
