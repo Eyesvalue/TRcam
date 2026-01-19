@@ -1,24 +1,71 @@
 <!DOCTYPE html>
-<!DOCTYPE html>
 <html lang="tr">
 <head>
-    <!-- Mevcut head içeriği... -->
-</head>
-<body>
-    <!-- ⬇️ BU KISMI EKLEYIN ⬇️ -->
-    <div id="password-screen" style="
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100vh;
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-    ">
-        <div style="
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TR Canlı Kameralar</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0f1419;
+            color: white;
+            overflow: hidden;
+        }
+        
+        #map { 
+            height: 100vh;
+            width: 100%;
+            z-index: 1;
+        }
+        
+        .leaflet-popup-content { 
+            color: #000;
+            text-align: center;
+        }
+        
+        .leaflet-popup-content img {
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+        
+        .leaflet-popup-content a {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+        
+        .leaflet-popup-content a:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        /* Şifre Ekranı Stilleri */
+        #password-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+        }
+
+        .password-container {
             background: rgba(255,255,255,0.05);
             backdrop-filter: blur(10px);
             padding: 40px;
@@ -28,54 +75,98 @@
             text-align: center;
             max-width: 400px;
             width: 90%;
-        ">
-            <h1 style="color: white; margin-bottom: 10px; font-size: 28px;">🎥 TR Canlı Kameralar</h1>
-            <p style="color: #888; margin-bottom: 30px;">Beta sürümüne erişim için şifre girin</p>
+        }
+
+        .password-container h1 {
+            color: white;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .password-container p {
+            color: #888;
+            margin-bottom: 30px;
+        }
+
+        #password-input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.05);
+            color: white;
+            border-radius: 10px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        #password-input:focus {
+            border-color: #667eea;
+            background: rgba(255,255,255,0.08);
+        }
+
+        #login-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        #login-btn:hover {
+            transform: scale(1.02);
+        }
+
+        #error-msg {
+            color: #ff6b6b;
+            margin-top: 15px;
+            display: none;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ŞİFRE EKRANI -->
+    <div id="password-screen">
+        <div class="password-container">
+            <h1>🎥 TR Canlı Kameralar</h1>
+            <p>Beta sürümüne erişim için şifre girin</p>
             
             <input 
                 type="password" 
                 id="password-input" 
                 placeholder="Şifre girin..."
-                style="
-                    width: 100%;
-                    padding: 15px;
-                    border: 1px solid rgba(255,255,255,0.1);
-                    background: rgba(255,255,255,0.05);
-                    color: white;
-                    border-radius: 10px;
-                    font-size: 16px;
-                    margin-bottom: 20px;
-                    outline: none;
-                "
+                autocomplete="off"
             />
             
-            <button 
-                onclick="checkPassword()" 
-                style="
-                    width: 100%;
-                    padding: 15px;
-                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                    color: white;
-                    border: none;
-                    border-radius: 10px;
-                    font-size: 16px;
-                    font-weight: bold;
-                    cursor: pointer;
-                    transition: transform 0.2s;
-                "
-                onmouseover="this.style.transform='scale(1.02)'"
-                onmouseout="this.style.transform='scale(1)'"
-            >
+            <button id="login-btn" onclick="checkPassword()">
                 Giriş Yap
             </button>
             
-            <p id="error-msg" style="color: #ff6b6b; margin-top: 15px; display: none; font-size: 14px;">
-                ❌ Yanlış şifre!
-            </p>
+            <p id="error-msg">❌ Yanlış şifre!</p>
         </div>
     </div>
 
+    <!-- HARİTA -->
+    <div id="map"></div>
+
+    <!-- LEAFLET KÜTÜPHANESİ -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- SUPABASE KÜTÜPHANESİ -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
+        // ========================================
+        // 1. ŞİFRE KORUMASI
+        // ========================================
         const CORRECT_PASSWORD = "beta2025"; // İstediğiniz şifreyi buraya yazın
 
         function checkPassword() {
@@ -84,18 +175,21 @@
             const passwordScreen = document.getElementById('password-screen');
             
             if (input.value === CORRECT_PASSWORD) {
-                // Şifre doğru - ekranı kapat
                 passwordScreen.style.display = 'none';
                 sessionStorage.setItem('authenticated', 'true');
             } else {
-                // Şifre yanlış
                 errorMsg.style.display = 'block';
                 input.value = '';
                 input.focus();
+                
+                // 3 saniye sonra hata mesajını gizle
+                setTimeout(() => {
+                    errorMsg.style.display = 'none';
+                }, 3000);
             }
         }
 
-        // Enter tuşu ile de giriş yapılabilsin
+        // Enter tuşu ile giriş
         document.getElementById('password-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 checkPassword();
@@ -106,112 +200,95 @@
         window.addEventListener('load', function() {
             if (sessionStorage.getItem('authenticated') === 'true') {
                 document.getElementById('password-screen').style.display = 'none';
+            } else {
+                document.getElementById('password-input').focus();
             }
         });
-    </script>
-    <!-- ⬆️ BU KISIM EKLE BİTTİ ⬆️ -->
 
-    <!-- Mevcut harita ve içerik kodları buradan devam ediyor... -->
-    <div id="map"></div>
-    ...
-</body>
-</html>
-<script>
-    // 1. BASİT GİRİŞ ŞİFRESİ
-    const sifre = "kamera2025"; // Burayı kendi şifrenle değiştir
-    let girilen = prompt("Lütfen giriş şifresini yazın:");
-
-    if (girilen !== sifre) {
-        alert("Hatalı şifre!");
-        document.body.innerHTML = "<h1>Erişim Reddedildi.</h1>";
-        window.stop(); // Sayfanın geri kalanını yüklemeyi durdurur
-    }
-
-    // ... Supabase bağlantı kodların burada kalacak ...
-
-    // 2. LİNK MASKELEME FONKSİYONU
-    // Bu fonksiyon, linkin çalınmasını zorlaştırır.
-    function yayiniAc(id) {
-        // Kullanıcı linki sağ tıklayıp kopyalayamaz, çünkü link DOM'da doğrudan yok.
-        // Veriyi o an Supabase'den veya hafızadaki listeden bulup açarız.
-        const kamera = kameralarListesi.find(k => k.id === id);
-        if (kamera && kamera.stream_url) {
-            window.open(kamera.stream_url, '_blank');
-        }
-    }
-</script>
-<html lang="tr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TR Canlı Kameralar - Koyu Harita</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style>
-        body { font-family: sans-serif; margin: 0; background: #121212; color: white; }
-        #map { height: 100vh; width: 100%; } /* Tam ekran koyu harita */
-        .leaflet-popup-content { color: #000; }
-    </style>
-</head>
-<body>
-
-    <div id="map"></div>
-
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script>
-        // BURAYI SUPABASE'DEN ALDIĞIN BİLGİLERLE DOLDUR
+        // ========================================
+        // 2. SUPABASE BAĞLANTISI
+        // ========================================
         const SUPABASE_URL = 'https://egrvojzmrykairbglqjq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncnZvanptcnlrYWlyYmdscWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDgyNDcsImV4cCI6MjA4NDI4NDI0N30.sbIKNJcVlEGlVOgb_gBagP-Nn1NtBMKOlRzJmhH5TSM';
 
         const { createClient } = supabase;
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // KOYU TEMA HARİTA BAŞLATMA
+        // ========================================
+        // 3. HARİTA AYARLARI (GRİMSİ TON)
+        // ========================================
         var map = L.map('map').setView([39.0, 35.0], 6);
 
-        // CartoDB Dark Matter (Koyu Tema)
+        // Grimsi koyu tema harita
         L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap &copy; CARTO'
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
         }).addTo(map);
 
+        // ========================================
+        // 4. KAMERALARI YÜKLEME
+        // ========================================
         async function verileriYukle() {
             try {
-                // Tablo isminiz 'Kameralar' (K harfi büyük) ise tam böyle yazın
-                const { data, error } = await supabaseClient.from('Kameralar').select('*');
+                const { data, error } = await supabaseClient
+                    .from('Kameralar')
+                    .select('*');
                 
                 if (error) {
                     console.error("Supabase Hatası:", error.message);
+                    alert("Veriler yüklenirken hata oluştu: " + error.message);
                     return;
                 }
 
                 if (data && data.length > 0) {
+                    console.log(`✅ ${data.length} kamera yüklendi`);
+                    
                     data.forEach(kamera => {
-                        // Sütun isimlerini tablodaki gibi tam eşleşecek şekilde güncelledik
-                        const ad = kamera['kamera adı'];
+                        const ad = kamera['kamera adı'] || 'İsimsiz Kamera';
                         const lat = kamera['Enlem - koordinat için'];
                         const lng = kamera['Boylam - koordinat için'];
                         const img = kamera['snapshot_url'];
                         const stream = kamera['stream_url'];
 
                         if (lat && lng) {
-                            L.marker([lat, lng]).addTo(map)
+                            // Mavi marker ikonu
+                            const blueIcon = L.icon({
+                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+                                iconSize: [25, 41],
+                                iconAnchor: [12, 41],
+                                popupAnchor: [1, -34],
+                                shadowSize: [41, 41]
+                            });
+
+                            L.marker([lat, lng], { icon: blueIcon })
+                                .addTo(map)
                                 .bindPopup(`
-                                    <div style="text-align:center">
-                                        <b>${ad || 'Kamera'}</b><br>
-                                        <img src="${img || 'https://via.placeholder.com/150'}" width="150" style="margin:5px 0"><br>
-                                        <a href="${stream}" target="_blank">Canlı İzle</a>
+                                    <div style="min-width: 200px;">
+                                        <b style="font-size: 16px;">${ad}</b><br>
+                                        ${img ? `<img src="${img}" width="200" style="margin: 10px 0; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/200x150?text=Görsel+Yok'">` : ''}
+                                        <br>
+                                        ${stream ? `<a href="${stream}" target="_blank">🎥 Canlı İzle</a>` : '<span style="color: #999;">Canlı yayın yok</span>'}
                                     </div>
                                 `);
                         }
                     });
+                } else {
+                    console.log("⚠️ Henüz kamera eklenmemiş");
                 }
             } catch (err) {
-                console.error("Hata:", err);
+                console.error("Beklenmeyen hata:", err);
             }
         }
 
-        verileriYukle();
+        // Sadece giriş yapıldıktan sonra kameraları yükle
+        const checkAndLoad = setInterval(() => {
+            if (sessionStorage.getItem('authenticated') === 'true') {
+                verileriYukle();
+                clearInterval(checkAndLoad);
+            }
+        }, 100);
     </script>
 </body>
 </html>
