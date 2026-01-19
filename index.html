@@ -4,7 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TR Canlı Kameralar</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin=""/>
+    
     <style>
         * {
             margin: 0;
@@ -51,7 +56,7 @@
             transform: translateY(-2px);
         }
 
-        /* Şifre Ekranı Stilleri */
+        /* Şifre Ekranı */
         #password-screen {
             position: fixed;
             top: 0;
@@ -157,17 +162,19 @@
     <!-- HARİTA -->
     <div id="map"></div>
 
-    <!-- LEAFLET KÜTÜPHANESİ -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
     
-    <!-- SUPABASE KÜTÜPHANESİ -->
+    <!-- Supabase JS -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
         // ========================================
         // 1. ŞİFRE KORUMASI
         // ========================================
-        const CORRECT_PASSWORD = "beta2025"; // İstediğiniz şifreyi buraya yazın
+        const CORRECT_PASSWORD = "beta2025";
 
         function checkPassword() {
             const input = document.getElementById('password-input');
@@ -181,22 +188,18 @@
                 errorMsg.style.display = 'block';
                 input.value = '';
                 input.focus();
-                
-                // 3 saniye sonra hata mesajını gizle
                 setTimeout(() => {
                     errorMsg.style.display = 'none';
                 }, 3000);
             }
         }
 
-        // Enter tuşu ile giriş
         document.getElementById('password-input').addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 checkPassword();
             }
         });
 
-        // Sayfa yüklendiğinde kontrol et
         window.addEventListener('load', function() {
             if (sessionStorage.getItem('authenticated') === 'true') {
                 document.getElementById('password-screen').style.display = 'none';
@@ -206,7 +209,7 @@
         });
 
         // ========================================
-        // 2. SUPABASE BAĞLANTISI
+        // 2. SUPABASE
         // ========================================
         const SUPABASE_URL = 'https://egrvojzmrykairbglqjq.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncnZvanptcnlrYWlyYmdscWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDgyNDcsImV4cCI6MjA4NDI4NDI0N30.sbIKNJcVlEGlVOgb_gBagP-Nn1NtBMKOlRzJmhH5TSM';
@@ -215,19 +218,18 @@
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ========================================
-        // 3. HARİTA AYARLARI (GRİMSİ TON)
+        // 3. HARİTA - KLASİK OSM (GARANTİLİ ÇALIŞIR)
         // ========================================
         var map = L.map('map').setView([39.0, 35.0], 6);
 
-        // CartoDB Dark All - Etiketli, garantili çalışır
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>',
-            subdomains: 'abcd',
-            maxZoom: 20
+        // Klasik OpenStreetMap - %100 çalışır, açık renkli
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+            maxZoom: 19
         }).addTo(map);
 
         // ========================================
-        // 4. KAMERALARI YÜKLEME
+        // 4. KAMERALARI YÜKLE
         // ========================================
         async function verileriYukle() {
             try {
@@ -237,7 +239,6 @@
                 
                 if (error) {
                     console.error("Supabase Hatası:", error.message);
-                    alert("Veriler yüklenirken hata oluştu: " + error.message);
                     return;
                 }
 
@@ -252,7 +253,6 @@
                         const stream = kamera['stream_url'];
 
                         if (lat && lng) {
-                            // Mavi marker ikonu
                             const blueIcon = L.icon({
                                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
                                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -267,22 +267,19 @@
                                 .bindPopup(`
                                     <div style="min-width: 200px;">
                                         <b style="font-size: 16px;">${ad}</b><br>
-                                        ${img ? `<img src="${img}" width="200" style="margin: 10px 0; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/200x150?text=Görsel+Yok'">` : ''}
+                                        ${img ? `<img src="${img}" width="200" style="margin: 10px 0; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/200x150?text=Gorsel+Yok'">` : ''}
                                         <br>
                                         ${stream ? `<a href="${stream}" target="_blank">🎥 Canlı İzle</a>` : '<span style="color: #999;">Canlı yayın yok</span>'}
                                     </div>
                                 `);
                         }
                     });
-                } else {
-                    console.log("⚠️ Henüz kamera eklenmemiş");
                 }
             } catch (err) {
-                console.error("Beklenmeyen hata:", err);
+                console.error("Hata:", err);
             }
         }
 
-        // Sadece giriş yapıldıktan sonra kameraları yükle
         const checkAndLoad = setInterval(() => {
             if (sessionStorage.getItem('authenticated') === 'true') {
                 verileriYukle();
