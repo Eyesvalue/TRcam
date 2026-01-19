@@ -134,6 +134,35 @@
             display: none;
             font-size: 14px;
         }
+
+        /* Hover Snapshot Preview */
+        .snapshot-preview {
+            position: fixed;
+            pointer-events: none;
+            z-index: 10000;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            padding: 8px;
+            display: none;
+        }
+
+        .snapshot-preview img {
+            border-radius: 4px;
+            max-width: 300px;
+            max-height: 200px;
+            display: block;
+        }
+
+        .snapshot-preview .loading {
+            width: 300px;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -161,6 +190,11 @@
 
     <!-- HARİTA -->
     <div id="map"></div>
+
+    <!-- Snapshot Preview (Hover için) -->
+    <div class="snapshot-preview" id="snapshot-preview">
+        <div class="loading">Yükleniyor...</div>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
@@ -260,8 +294,44 @@
         }).addTo(map);
 
         // ========================================
-        // 4. KAMERALARI YÜKLE
+        // 4. KAMERALARI YÜKLE + HOVER SNAPSHOT
         // ========================================
+        const snapshotPreview = document.getElementById('snapshot-preview');
+        let hoverTimeout;
+
+        function showSnapshotPreview(e, imgUrl) {
+            if (!imgUrl) return;
+            
+            clearTimeout(hoverTimeout);
+            
+            hoverTimeout = setTimeout(() => {
+                snapshotPreview.innerHTML = `<img src="${imgUrl}" onerror="this.parentElement.innerHTML='<div class=loading>Görsel yüklenemedi</div>'">`;
+                snapshotPreview.style.display = 'block';
+                updatePreviewPosition(e);
+            }, 500); // 0.5 saniye bekle
+        }
+
+        function hideSnapshotPreview() {
+            clearTimeout(hoverTimeout);
+            snapshotPreview.style.display = 'none';
+        }
+
+        function updatePreviewPosition(e) {
+            const x = e.clientX + 20;
+            const y = e.clientY + 20;
+            const maxX = window.innerWidth - 320;
+            const maxY = window.innerHeight - 220;
+            
+            snapshotPreview.style.left = Math.min(x, maxX) + 'px';
+            snapshotPreview.style.top = Math.min(y, maxY) + 'px';
+        }
+
+        document.addEventListener('mousemove', (e) => {
+            if (snapshotPreview.style.display === 'block') {
+                updatePreviewPosition(e);
+            }
+        });
+
         async function verileriYukle() {
             try {
                 const { data, error } = await supabaseClient
@@ -293,7 +363,7 @@
                                 shadowSize: [41, 41]
                             });
 
-                            L.marker([lat, lng], { icon: blueIcon })
+                            const marker = L.marker([lat, lng], { icon: blueIcon })
                                 .addTo(map)
                                 .bindPopup(`
                                     <div style="min-width: 200px;">
@@ -303,6 +373,15 @@
                                         ${stream ? `<a href="${stream}" target="_blank">🎥 Canlı İzle</a>` : '<span style="color: #999;">Canlı yayın yok</span>'}
                                     </div>
                                 `);
+
+                            // HOVER SNAPSHOT ÖZELLİĞİ
+                            marker.on('mouseover', function(e) {
+                                showSnapshotPreview(e.originalEvent, img);
+                            });
+
+                            marker.on('mouseout', function() {
+                                hideSnapshotPreview();
+                            });
                         }
                     });
                 }
