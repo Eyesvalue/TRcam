@@ -215,14 +215,15 @@
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // ========================================
-        // 3. HARİTA AYARLARI (GRİ TON)
+        // 3. HARİTA AYARLARI (GRİMSİ TON)
         // ========================================
         var map = L.map('map').setView([39.0, 35.0], 6);
 
-        // Daha açık gri ton harita (Windy benzeri)
-        L.tileLayer('https://tiles.stadiamaps.com/tiles/alidade_smooth_dark/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://stadiamaps.com/">Stadia Maps</a> &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a>',
-            maxZoom: 20
+        // Gri ton harita - CartoDB Dark (ücretsiz, API key gerektirmez)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/dark_nolabels/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
         }).addTo(map);
 
         // ========================================
