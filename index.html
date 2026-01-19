@@ -1,4 +1,121 @@
 <!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <!-- Mevcut head içeriği... -->
+</head>
+<body>
+    <!-- ⬇️ BU KISMI EKLEYIN ⬇️ -->
+    <div id="password-screen" style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    ">
+        <div style="
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+        ">
+            <h1 style="color: white; margin-bottom: 10px; font-size: 28px;">🎥 TR Canlı Kameralar</h1>
+            <p style="color: #888; margin-bottom: 30px;">Beta sürümüne erişim için şifre girin</p>
+            
+            <input 
+                type="password" 
+                id="password-input" 
+                placeholder="Şifre girin..."
+                style="
+                    width: 100%;
+                    padding: 15px;
+                    border: 1px solid rgba(255,255,255,0.1);
+                    background: rgba(255,255,255,0.05);
+                    color: white;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    margin-bottom: 20px;
+                    outline: none;
+                "
+            />
+            
+            <button 
+                onclick="checkPassword()" 
+                style="
+                    width: 100%;
+                    padding: 15px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    transition: transform 0.2s;
+                "
+                onmouseover="this.style.transform='scale(1.02)'"
+                onmouseout="this.style.transform='scale(1)'"
+            >
+                Giriş Yap
+            </button>
+            
+            <p id="error-msg" style="color: #ff6b6b; margin-top: 15px; display: none; font-size: 14px;">
+                ❌ Yanlış şifre!
+            </p>
+        </div>
+    </div>
+
+    <script>
+        const CORRECT_PASSWORD = "beta2025"; // İstediğiniz şifreyi buraya yazın
+
+        function checkPassword() {
+            const input = document.getElementById('password-input');
+            const errorMsg = document.getElementById('error-msg');
+            const passwordScreen = document.getElementById('password-screen');
+            
+            if (input.value === CORRECT_PASSWORD) {
+                // Şifre doğru - ekranı kapat
+                passwordScreen.style.display = 'none';
+                sessionStorage.setItem('authenticated', 'true');
+            } else {
+                // Şifre yanlış
+                errorMsg.style.display = 'block';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        // Enter tuşu ile de giriş yapılabilsin
+        document.getElementById('password-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        // Sayfa yüklendiğinde kontrol et
+        window.addEventListener('load', function() {
+            if (sessionStorage.getItem('authenticated') === 'true') {
+                document.getElementById('password-screen').style.display = 'none';
+            }
+        });
+    </script>
+    <!-- ⬆️ BU KISIM EKLE BİTTİ ⬆️ -->
+
+    <!-- Mevcut harita ve içerik kodları buradan devam ediyor... -->
+    <div id="map"></div>
+    ...
+</body>
+</html>
 <script>
     // 1. BASİT GİRİŞ ŞİFRESİ
     const sifre = "kamera2025"; // Burayı kendi şifrenle değiştir
