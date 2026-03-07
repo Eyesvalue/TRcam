@@ -1,401 +1,1046 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="tr" data-theme="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TR Canlı Kameralar</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
-          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
-          crossorigin=""/>
-    
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #0f1419;
-            color: white;
-            overflow: hidden;
-        }
-        
-        #map { 
-            height: 100vh;
-            width: 100%;
-            z-index: 1;
-        }
-        
-        .leaflet-popup-content { 
-            color: #000;
-            text-align: center;
-        }
-        
-        .leaflet-popup-content img {
-            border-radius: 8px;
-            margin: 10px 0;
-        }
-        
-        .leaflet-popup-content a {
-            display: inline-block;
-            padding: 8px 16px;
-            background: #667eea;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-        
-        .leaflet-popup-content a:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LiveWorld – Dünyayı Gerçek Zamanlı İzle</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ═══════════════════════════════════════
+   THEME VARIABLES
+═══════════════════════════════════════ */
+[data-theme="dark"] {
+  --bg: #080c14;
+  --bg2: #0d1422;
+  --surface: #111827;
+  --card: #111827;
+  --card-hover: #162035;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e2e8f0;
+  --text2: #94a3b8;
+  --muted: #64748b;
+  --nav-bg: rgba(8,12,20,0.88);
+  --shadow: rgba(0,0,0,0.5);
+  --input-bg: rgba(255,255,255,0.06);
+  --modal-bg: rgba(0,0,0,0.92);
+}
+[data-theme="light"] {
+  --bg: #f0f4f8;
+  --bg2: #e2e8f0;
+  --surface: #ffffff;
+  --card: #ffffff;
+  --card-hover: #f8faff;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.15);
+  --text: #0f172a;
+  --text2: #475569;
+  --muted: #94a3b8;
+  --nav-bg: rgba(240,244,248,0.92);
+  --shadow: rgba(0,0,0,0.12);
+  --input-bg: rgba(0,0,0,0.05);
+  --modal-bg: rgba(0,0,0,0.75);
+}
+:root {
+  --accent: #3b82f6;
+  --accent2: #06b6d4;
+  --live: #ef4444;
+  --gold: #f59e0b;
+  --green: #10b981;
+}
 
-        /* Şifre Ekranı */
-        #password-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
+/* ═══════════════════════════════════════
+   BASE
+═══════════════════════════════════════ */
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Sans', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background 0.3s, color 0.3s;
+}
+a { text-decoration: none; color: inherit; }
+button { cursor: pointer; font-family: inherit; }
+img { display: block; }
 
-        .password-container {
-            background: rgba(255,255,255,0.05);
-            backdrop-filter: blur(10px);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255,255,255,0.1);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-            text-align: center;
-            max-width: 400px;
-            width: 90%;
-        }
+/* ═══════════════════════════════════════
+   NAV
+═══════════════════════════════════════ */
+nav {
+  position: fixed; top:0; left:0; right:0; z-index:200;
+  height: 60px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 12px;
+  transition: background 0.3s;
+}
+.logo {
+  display: flex; align-items: center; gap: 9px;
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: 1.2rem; white-space: nowrap; color: var(--text);
+}
+.logo-icon {
+  width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+}
+.logo em { color: var(--accent2); font-style: normal; }
 
-        .password-container h1 {
-            color: white;
-            margin-bottom: 10px;
-            font-size: 28px;
-        }
+.nav-links {
+  display: flex; align-items: center; gap: 2px; list-style: none;
+  margin-left: 8px;
+}
+.nav-links a {
+  padding: 6px 11px; border-radius: 8px; font-size: 0.82rem; font-weight: 500;
+  color: var(--text2); transition: all 0.18s; display: flex; align-items: center; gap: 4px;
+}
+.nav-links a:hover { background: var(--input-bg); color: var(--text); }
+.nav-links a.active { color: var(--accent2); }
 
-        .password-container p {
-            color: #888;
-            margin-bottom: 30px;
-        }
+.nav-right { margin-left: auto; display: flex; align-items: center; gap: 8px; }
 
-        #password-input {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid rgba(255,255,255,0.1);
-            background: rgba(255,255,255,0.05);
-            color: white;
-            border-radius: 10px;
-            font-size: 16px;
-            margin-bottom: 20px;
-            outline: none;
-            transition: all 0.3s;
-        }
+.search-wrap {
+  display: flex; align-items: center; gap: 7px;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 7px 13px;
+  transition: all 0.2s;
+}
+.search-wrap:focus-within { border-color: var(--accent); background: rgba(59,130,246,0.07); }
+.search-wrap input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-size: 0.82rem; width: 160px;
+}
+.search-wrap input::placeholder { color: var(--muted); }
+.search-wrap span { color: var(--muted); font-size: 0.9rem; }
 
-        #password-input:focus {
-            border-color: #667eea;
-            background: rgba(255,255,255,0.08);
-        }
+/* Theme Toggle */
+.theme-btn {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  color: var(--text); font-size: 1.05rem;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.25s; position: relative; overflow: hidden;
+}
+.theme-btn:hover { background: var(--card-hover); border-color: var(--accent); transform: rotate(15deg); }
+.theme-icon { transition: transform 0.4s, opacity 0.3s; }
 
-        #login-btn {
-            width: 100%;
-            padding: 15px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 16px;
-            font-weight: bold;
-            cursor: pointer;
-            transition: transform 0.2s;
-        }
+/* Auth btns */
+.btn-login {
+  padding: 7px 14px; border-radius: 9px; font-size: 0.82rem; font-weight: 500;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  color: var(--text); transition: all 0.2s;
+}
+.btn-login:hover { background: var(--card-hover); }
+.btn-signup {
+  padding: 7px 16px; border-radius: 9px; font-size: 0.82rem; font-weight: 600;
+  background: var(--accent); border: none; color: #fff; transition: all 0.2s;
+}
+.btn-signup:hover { background: #2563eb; transform: translateY(-1px); }
 
-        #login-btn:hover {
-            transform: scale(1.02);
-        }
+/* Hamburger */
+.hamburger {
+  display: none; flex-direction: column; gap: 4px;
+  background: none; border: none; padding: 6px;
+}
+.hamburger span {
+  width: 22px; height: 2px; background: var(--text); border-radius: 2px;
+  transition: all 0.3s;
+}
 
-        #error-msg {
-            color: #ff6b6b;
-            margin-top: 15px;
-            display: none;
-            font-size: 14px;
-        }
+/* ═══════════════════════════════════════
+   MOBILE NAV DRAWER
+═══════════════════════════════════════ */
+.mobile-drawer {
+  position: fixed; top: 60px; left: 0; right: 0; z-index: 190;
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 16px 20px; display: none; flex-direction: column; gap: 4px;
+  box-shadow: 0 8px 24px var(--shadow);
+}
+.mobile-drawer.open { display: flex; }
+.mobile-drawer a {
+  padding: 11px 14px; border-radius: 10px; font-size: 0.88rem; font-weight: 500;
+  color: var(--text2); transition: all 0.15s; display: flex; align-items: center; gap: 8px;
+}
+.mobile-drawer a:hover { background: var(--input-bg); color: var(--text); }
+.mobile-drawer-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 8px;
+}
+.mobile-drawer-search input {
+  background: none; border: none; outline: none;
+  color: var(--text); font-size: 0.88rem; flex: 1;
+}
 
-        /* Hover Snapshot Preview */
-        .snapshot-preview {
-            position: fixed;
-            pointer-events: none;
-            z-index: 10000;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            padding: 8px;
-            display: none;
-        }
+/* ═══════════════════════════════════════
+   PAGE TABS
+═══════════════════════════════════════ */
+.page { display: none; padding-top: 60px; }
+.page.active { display: block; }
 
-        .snapshot-preview img {
-            border-radius: 4px;
-            max-width: 300px;
-            max-height: 200px;
-            display: block;
-        }
+/* ═══════════════════════════════════════
+   HERO
+═══════════════════════════════════════ */
+.hero-wrap { padding: 20px 24px; max-width: 1380px; margin: 0 auto; }
+.hero-grid { display: grid; grid-template-columns: 1fr 360px; gap: 16px; }
 
-        .snapshot-preview .loading {
-            width: 300px;
-            height: 200px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 14px;
-        }
-    </style>
+.hero-main {
+  position: relative; border-radius: 16px; overflow: hidden;
+  aspect-ratio: 16/9; background: #000; cursor: pointer;
+  border: 1px solid var(--border);
+}
+.hero-main img {
+  width: 100%; height: 100%; object-fit: cover; transition: transform 0.45s;
+}
+.hero-main:hover img { transform: scale(1.03); }
+.hero-grad {
+  position: absolute; inset: 0;
+  background: linear-gradient(to top, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.1) 55%, transparent 100%);
+}
+.hero-content { position: absolute; bottom: 0; left: 0; right: 0; padding: 22px; }
+.hero-badges { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+.hero-title {
+  font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 700;
+  line-height: 1.25; margin-bottom: 6px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+}
+.hero-loc { color: rgba(255,255,255,0.65); font-size: 0.85rem; margin-bottom: 14px; }
+.hero-actions { display: flex; gap: 8px; align-items: center; }
+.btn-watch {
+  display: flex; align-items: center; gap: 7px;
+  padding: 10px 20px; border-radius: 10px; background: var(--accent);
+  color: #fff; border: none; font-weight: 600; font-size: 0.875rem;
+  transition: all 0.2s;
+}
+.btn-watch:hover { background: #2563eb; transform: translateY(-1px); }
+.btn-heart {
+  padding: 10px 14px; border-radius: 10px; font-size: 1rem;
+  background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+  color: #fff; transition: all 0.2s;
+}
+.btn-heart:hover { background: rgba(255,255,255,0.22); }
+.btn-heart.liked { color: #ef4444; }
+
+/* Slider dots */
+.hero-dots { position: absolute; bottom: 16px; right: 18px; display: flex; gap: 5px; }
+.hdot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); cursor: pointer; transition: all 0.2s; }
+.hdot.active { background: #fff; width: 18px; border-radius: 4px; }
+
+/* Sidebar */
+.hero-sidebar { display: flex; flex-direction: column; gap: 10px; }
+.sidebar-hd {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.95rem;
+  display: flex; align-items: center; gap: 8px;
+  padding: 0 2px;
+}
+.sidebar-hd::before { content:''; width:3px; height:18px; border-radius:2px; background:var(--accent2); }
+.mini-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; }
+.mini-card {
+  position: relative; border-radius: 11px; overflow: hidden;
+  aspect-ratio: 16/10; background: #000; cursor: pointer;
+  border: 1px solid var(--border); transition: all 0.22s;
+}
+.mini-card:hover { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(59,130,246,0.18); }
+.mini-card img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+.mini-card:hover img { transform: scale(1.06); }
+.mini-grad { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 60%); }
+.mini-info { position: absolute; bottom: 0; left: 0; right: 0; padding: 8px 9px; }
+.mini-name { font-size: 0.72rem; font-weight: 600; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mini-loc { font-size: 0.65rem; color: rgba(255,255,255,0.6); margin-top: 1px; }
+.mini-badges { position: absolute; top: 6px; left: 6px; display: flex; gap: 3px; }
+.mini-viewers { position: absolute; top: 6px; right: 6px; }
+
+/* ═══════════════════════════════════════
+   BADGES
+═══════════════════════════════════════ */
+.badge {
+  padding: 2px 7px; border-radius: 5px;
+  font-size: 0.63rem; font-weight: 700; letter-spacing: 0.3px;
+}
+.b-live { background: var(--live); color: #fff; display: flex; align-items: center; gap: 3px; }
+.b-4k { background: var(--accent); color: #fff; }
+.b-views {
+  background: rgba(0,0,0,0.55); backdrop-filter: blur(8px);
+  color: #fff; border: 1px solid rgba(255,255,255,0.12);
+  font-size: 0.63rem; font-weight: 500;
+  padding: 2px 7px; border-radius: 5px;
+}
+.dot-live { width: 6px; height: 6px; border-radius: 50%; background: #fff; animation: blink 1.5s ease-in-out infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+/* ═══════════════════════════════════════
+   STATS BAR
+═══════════════════════════════════════ */
+.stats-bar {
+  max-width: 1380px; margin: 16px auto;
+  padding: 0 24px;
+}
+.stats-inner {
+  display: flex; border-radius: 14px; overflow: hidden;
+  background: var(--surface); border: 1px solid var(--border);
+}
+.stat { flex: 1; padding: 16px 12px; text-align: center; position: relative; }
+.stat + .stat::before {
+  content:''; position: absolute; left: 0; top: 20%; bottom: 20%;
+  width: 1px; background: var(--border);
+}
+.stat-val {
+  font-family: 'Syne', sans-serif; font-size: 1.5rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.stat-lbl { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+
+/* ═══════════════════════════════════════
+   SECTION
+═══════════════════════════════════════ */
+.section { max-width: 1380px; margin: 0 auto; padding: 0 24px 36px; }
+.section-hd {
+  display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;
+}
+.section-title {
+  font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.section-title::before { content:''; width: 3px; height: 20px; border-radius: 2px; background: var(--accent); }
+.see-all { font-size: 0.78rem; color: var(--accent2); font-weight: 500; display: flex; align-items: center; gap: 3px; transition: gap 0.2s; }
+.see-all:hover { gap: 7px; }
+
+/* ═══════════════════════════════════════
+   CATEGORIES
+═══════════════════════════════════════ */
+.cats { display: flex; gap: 8px; flex-wrap: wrap; }
+.cat-pill {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 40px;
+  background: var(--card); border: 1px solid var(--border);
+  font-size: 0.82rem; font-weight: 500; color: var(--text);
+  transition: all 0.18s;
+}
+.cat-pill:hover, .cat-pill.active {
+  border-color: var(--accent); background: var(--card-hover);
+  color: var(--accent2); box-shadow: 0 0 0 1px rgba(59,130,246,0.25);
+}
+.cat-cnt { font-size: 0.7rem; color: var(--muted); background: var(--input-bg); padding: 1px 6px; border-radius: 10px; }
+
+/* ═══════════════════════════════════════
+   CAMS GRID
+═══════════════════════════════════════ */
+.cams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 12px; }
+.cam-card {
+  border-radius: 13px; overflow: hidden; background: var(--card);
+  border: 1px solid var(--border); cursor: pointer; transition: all 0.22s;
+}
+.cam-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 10px 28px rgba(59,130,246,0.15); }
+.cam-thumb {
+  position: relative; aspect-ratio: 16/9; background: #000; overflow: hidden;
+}
+.cam-thumb img { width:100%; height:100%; object-fit:cover; transition: transform 0.35s; }
+.cam-card:hover .cam-thumb img { transform: scale(1.05); }
+.thumb-grad { position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.7) 0%, transparent 55%); }
+.thumb-top { position:absolute; top:8px; left:8px; display:flex; gap:4px; }
+.thumb-tr { position:absolute; top:8px; right:8px; }
+.play-btn {
+  position: absolute; top:50%; left:50%; transform: translate(-50%,-50%);
+  width: 40px; height: 40px; border-radius: 50%;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center; font-size: 1rem;
+  opacity: 0; transition: opacity 0.2s;
+}
+.cam-card:hover .play-btn { opacity: 1; }
+.cam-body { padding: 11px 13px; }
+.cam-name { font-weight: 600; font-size: 0.84rem; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cam-foot { display: flex; align-items: center; justify-content: space-between; }
+.cam-loc { display: flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--text2); }
+.cam-views { font-size: 0.7rem; color: var(--muted); display: flex; align-items: center; gap: 3px; }
+
+/* ═══════════════════════════════════════
+   COUNTRIES STRIP
+═══════════════════════════════════════ */
+.country-strip { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none; }
+.country-strip::-webkit-scrollbar { display: none; }
+.country-chip {
+  display: flex; align-items: center; gap: 6px;
+  padding: 8px 15px; border-radius: 10px; flex-shrink: 0;
+  background: var(--card); border: 1px solid var(--border);
+  font-size: 0.8rem; color: var(--text); transition: all 0.18s;
+}
+.country-chip:hover { border-color: var(--accent); background: var(--card-hover); }
+.flag { font-size: 1.05rem; }
+
+/* ═══════════════════════════════════════
+   MAP PAGE
+═══════════════════════════════════════ */
+#page-map { padding-top: 60px; height: 100vh; display: none; flex-direction: column; }
+#page-map.active { display: flex; }
+.map-header { padding: 12px 24px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+.map-header h2 { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; }
+#leaflet-map { flex: 1; }
+.leaflet-popup-content-wrapper { background: var(--card) !important; color: var(--text) !important; border: 1px solid var(--border) !important; border-radius: 12px !important; }
+.leaflet-popup-tip { background: var(--card) !important; }
+.map-popup-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.9rem; margin-bottom: 4px; }
+.map-popup-loc { font-size: 0.75rem; color: var(--muted); margin-bottom: 8px; }
+.map-popup-btn { padding: 6px 14px; border-radius: 8px; background: var(--accent); color: #fff; border: none; font-size: 0.78rem; font-weight: 600; cursor: pointer; width: 100%; }
+
+/* ═══════════════════════════════════════
+   AUTH MODAL
+═══════════════════════════════════════ */
+.overlay {
+  position: fixed; inset: 0; z-index: 300;
+  background: var(--modal-bg); backdrop-filter: blur(12px);
+  display: none; align-items: center; justify-content: center;
+}
+.overlay.open { display: flex; }
+.auth-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 20px; width: 90%; max-width: 420px;
+  padding: 32px; position: relative;
+  box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+  animation: scaleIn 0.25s ease;
+}
+@keyframes scaleIn { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.auth-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--input-bg); border: 1px solid var(--border);
+  color: var(--text); font-size: 0.9rem;
+  display: flex; align-items: center; justify-content: center;
+}
+.auth-logo { text-align: center; margin-bottom: 24px; }
+.auth-logo .logo-icon { margin: 0 auto 10px; width: 44px; height: 44px; font-size: 1.3rem; border-radius: 12px; }
+.auth-logo h2 { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.3rem; }
+.auth-logo p { color: var(--text2); font-size: 0.82rem; margin-top: 4px; }
+
+.auth-tabs { display: flex; background: var(--input-bg); border-radius: 10px; padding: 3px; margin-bottom: 22px; }
+.auth-tab {
+  flex: 1; padding: 8px; border-radius: 8px; border: none;
+  font-weight: 600; font-size: 0.83rem; color: var(--text2);
+  background: none; transition: all 0.2s;
+}
+.auth-tab.active { background: var(--accent); color: #fff; }
+
+.auth-form { display: flex; flex-direction: column; gap: 12px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-group label { font-size: 0.78rem; font-weight: 600; color: var(--text2); }
+.form-input {
+  padding: 11px 14px; border-radius: 10px;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  color: var(--text); font-size: 0.88rem; outline: none;
+  transition: all 0.2s; font-family: inherit;
+}
+.form-input:focus { border-color: var(--accent); background: rgba(59,130,246,0.05); }
+.form-input::placeholder { color: var(--muted); }
+.auth-btn {
+  padding: 12px; border-radius: 10px; border: none;
+  background: var(--accent); color: #fff;
+  font-weight: 700; font-size: 0.92rem; margin-top: 4px;
+  transition: all 0.2s;
+}
+.auth-btn:hover { background: #2563eb; transform: translateY(-1px); }
+.auth-sep { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 0.78rem; }
+.auth-sep::before, .auth-sep::after { content:''; flex:1; height: 1px; background: var(--border); }
+.social-btns { display: flex; gap: 8px; }
+.social-btn {
+  flex: 1; padding: 10px; border-radius: 10px;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  color: var(--text); font-size: 0.82rem; font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all 0.2s;
+}
+.social-btn:hover { background: var(--card-hover); }
+
+/* ═══════════════════════════════════════
+   VIDEO MODAL
+═══════════════════════════════════════ */
+.vid-modal {
+  background: var(--surface); border: 1px solid var(--border2);
+  border-radius: 20px; width: 90%; max-width: 900px; overflow: hidden;
+  animation: scaleIn 0.25s ease;
+}
+.vid-screen {
+  width: 100%; aspect-ratio: 16/9; background: #000;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.vid-screen img { width: 100%; height: 100%; object-fit: cover; opacity: 0.4; }
+.vid-center {
+  position: absolute; text-align: center;
+}
+.vid-center .v-icon { font-size: 3rem; margin-bottom: 10px; }
+.vid-center p { font-size: 0.88rem; color: rgba(255,255,255,0.6); margin-top: 4px; }
+.vid-live-badge {
+  position: absolute; top: 14px; left: 14px;
+  display: flex; align-items: center; gap: 5px;
+  background: var(--live); color: #fff;
+  padding: 5px 12px; border-radius: 8px;
+  font-weight: 700; font-size: 0.78rem;
+}
+.vid-info { padding: 18px 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.vid-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1.05rem; }
+.vid-meta { font-size: 0.78rem; color: var(--text2); margin-top: 3px; display: flex; align-items: center; gap: 10px; }
+.vid-actions { display: flex; gap: 8px; align-items: center; }
+.vid-close {
+  padding: 8px 16px; border-radius: 9px;
+  background: var(--input-bg); border: 1px solid var(--border2);
+  color: var(--text); font-size: 0.82rem; transition: all 0.2s;
+}
+.vid-close:hover { background: var(--card-hover); }
+
+/* ═══════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════ */
+footer {
+  border-top: 1px solid var(--border); padding: 24px;
+  max-width: 1380px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 12px; color: var(--muted); font-size: 0.78rem;
+}
+.foot-logo { font-family: 'Syne', sans-serif; font-weight: 800; color: var(--text); font-size: 0.95rem; margin-bottom: 3px; }
+.foot-links { display: flex; gap: 16px; }
+.foot-links a { color: var(--muted); transition: color 0.2s; }
+.foot-links a:hover { color: var(--accent2); }
+
+/* ═══════════════════════════════════════
+   ANIMATIONS
+═══════════════════════════════════════ */
+@keyframes fadeUp { from { opacity:0; transform: translateY(16px); } to { opacity:1; transform: translateY(0); } }
+.animate { animation: fadeUp 0.5s ease both; }
+.delay-1 { animation-delay: 0.1s; }
+.delay-2 { animation-delay: 0.2s; }
+
+/* ═══════════════════════════════════════
+   SCROLLBAR
+═══════════════════════════════════════ */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.25); border-radius: 4px; }
+
+/* ═══════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════ */
+@media (max-width: 900px) {
+  .hero-grid { grid-template-columns: 1fr; }
+  .hero-sidebar { display: none; }
+  .nav-links { display: none; }
+  .search-wrap { display: none; }
+  .hamburger { display: flex; }
+  .btn-login { display: none; }
+  .stats-inner { flex-wrap: wrap; }
+  .stat { min-width: 50%; }
+  .hero-title { font-size: 1.2rem; }
+}
+@media (max-width: 600px) {
+  nav { padding: 0 14px; gap: 8px; }
+  .hero-wrap { padding: 12px 14px; }
+  .section { padding: 0 14px 28px; }
+  .cams-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .stat { min-width: 50%; padding: 12px 8px; }
+  .stat-val { font-size: 1.2rem; }
+  footer { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 420px) {
+  .cams-grid { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
 
-    <!-- ŞİFRE EKRANI -->
-    <div id="password-screen">
-        <div class="password-container">
-            <h1>🎥 TR Canlı Kameralar</h1>
-            <p>Beta sürümüne erişim için şifre girin</p>
-            
-            <input 
-                type="password" 
-                id="password-input" 
-                placeholder="Şifre girin..."
-                autocomplete="off"
-            />
-            
-            <button id="login-btn" onclick="checkPassword()">
-                Giriş Yap
-            </button>
-            
-            <p id="error-msg">❌ Yanlış şifre!</p>
+<!-- ═══════ NAV ═══════ -->
+<nav>
+  <a class="logo" href="#" onclick="showPage('home'); return false;">
+    <div class="logo-icon">🌐</div>
+    Live<em>World</em>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#" class="active" onclick="showPage('home');return false;">🔥 Popüler</a></li>
+    <li><a href="#" onclick="showPage('home');return false;">📡 Canlı</a></li>
+    <li><a href="#" onclick="showPage('home');return false;">🗂 Kategoriler</a></li>
+    <li><a href="#" onclick="showPage('map');return false;">🗺 Harita</a></li>
+    <li><a href="#" onclick="showPage('home');return false;">📝 Blog</a></li>
+  </ul>
+  <div class="nav-right">
+    <div class="search-wrap">
+      <span>🔍</span>
+      <input type="text" placeholder="Kamera ara..." id="search-input" oninput="filterCams(this.value)">
+    </div>
+    <button class="theme-btn" onclick="toggleTheme()" title="Tema değiştir">
+      <span class="theme-icon" id="theme-icon">🌙</span>
+    </button>
+    <button class="btn-login" onclick="openAuth('login')">Giriş Yap</button>
+    <button class="btn-signup" onclick="openAuth('signup')">Kayıt Ol</button>
+    <button class="hamburger" onclick="toggleDrawer()" id="hamburger">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- Mobile Drawer -->
+<div class="mobile-drawer" id="mobile-drawer">
+  <div class="mobile-drawer-search">
+    <span>🔍</span>
+    <input type="text" placeholder="Kamera ara..." oninput="filterCams(this.value)">
+  </div>
+  <a href="#" onclick="showPage('home');toggleDrawer();return false;">🔥 Popüler</a>
+  <a href="#" onclick="showPage('home');toggleDrawer();return false;">📡 Canlı Kameralar</a>
+  <a href="#" onclick="showPage('home');toggleDrawer();return false;">🗂 Kategoriler</a>
+  <a href="#" onclick="showPage('map');toggleDrawer();return false;">🗺 Dünya Haritası</a>
+  <a href="#" onclick="openAuth('login');toggleDrawer();return false;">👤 Giriş Yap</a>
+  <a href="#" onclick="openAuth('signup');toggleDrawer();return false;">✨ Kayıt Ol</a>
+</div>
+
+<!-- ═══════ HOME PAGE ═══════ -->
+<div id="page-home" class="page active">
+
+  <!-- Hero -->
+  <div class="hero-wrap animate">
+    <div class="hero-grid">
+      <div class="hero-main" id="hero-main" onclick="openVideo(heroData[currentHero])">
+        <img id="hero-img" src="" alt="">
+        <div class="hero-grad"></div>
+        <div class="hero-content">
+          <div class="hero-badges">
+            <span class="badge b-live"><span class="dot-live"></span> CANLI</span>
+            <span class="badge b-4k">4K</span>
+            <span class="badge b-views" id="hero-views">👁 0</span>
+          </div>
+          <div class="hero-title" id="hero-title"></div>
+          <div class="hero-loc" id="hero-loc"></div>
+          <div class="hero-actions">
+            <button class="btn-watch" onclick="event.stopPropagation();openVideo(heroData[currentHero])">▶ İzle</button>
+            <button class="btn-heart" id="hero-heart" onclick="event.stopPropagation();toggleHeart(this)">♡</button>
+          </div>
         </div>
+        <div class="hero-dots" id="hero-dots"></div>
+      </div>
+
+      <div class="hero-sidebar">
+        <div class="sidebar-hd">Öne Çıkan Kameralar</div>
+        <div class="mini-grid" id="mini-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-bar animate delay-1">
+    <div class="stats-inner">
+      <div class="stat"><div class="stat-val" data-target="4832">0</div><div class="stat-lbl">Toplam Kamera</div></div>
+      <div class="stat"><div class="stat-val" data-target="187">0</div><div class="stat-lbl">Ülke</div></div>
+      <div class="stat"><div class="stat-val">52K+</div><div class="stat-lbl">Anlık İzleyici</div></div>
+      <div class="stat"><div class="stat-val">98%</div><div class="stat-lbl">Çalışma Süresi</div></div>
+      <div class="stat"><div class="stat-val">4K HD</div><div class="stat-lbl">Ultra Net Yayın</div></div>
+    </div>
+  </div>
+
+  <!-- Categories -->
+  <div class="section animate delay-2">
+    <div class="section-hd">
+      <div class="section-title">Kategoriler</div>
+      <a href="#" class="see-all">Tümünü Gör →</a>
+    </div>
+    <div class="cats" id="cats">
+      <button class="cat-pill active" data-cat="all">🌐 Tümü <span class="cat-cnt">4832</span></button>
+      <button class="cat-pill" data-cat="beach">🏖 Plajlar <span class="cat-cnt">1240</span></button>
+      <button class="cat-pill" data-cat="city">🏙 Şehirler <span class="cat-cnt">984</span></button>
+      <button class="cat-pill" data-cat="airport">✈️ Havalimanları <span class="cat-cnt">312</span></button>
+      <button class="cat-pill" data-cat="nature">🦅 Doğa <span class="cat-cnt">756</span></button>
+      <button class="cat-pill" data-cat="mountain">⛷ Dağ & Kayak <span class="cat-cnt">428</span></button>
+      <button class="cat-pill" data-cat="underwater">🐠 Su Altı <span class="cat-cnt">183</span></button>
+      <button class="cat-pill" data-cat="ocean">🌊 Okyanus <span class="cat-cnt">329</span></button>
+    </div>
+  </div>
+
+  <!-- Cams Grid -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-title">🔥 Popüler Kameralar</div>
+      <a href="#" class="see-all">Tümünü Gör →</a>
+    </div>
+    <div class="cams-grid" id="cams-grid"></div>
+  </div>
+
+  <!-- Countries -->
+  <div class="section">
+    <div class="section-hd">
+      <div class="section-title">🌍 Ülkelere Göre Gözat</div>
+      <a href="#" class="see-all">Tüm Ülkeler →</a>
+    </div>
+    <div class="country-strip">
+      <a href="#" class="country-chip"><span class="flag">🇹🇷</span> Türkiye <span class="cat-cnt">284</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇺🇸</span> ABD <span class="cat-cnt">891</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇮🇹</span> İtalya <span class="cat-cnt">432</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇫🇷</span> Fransa <span class="cat-cnt">378</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇯🇵</span> Japonya <span class="cat-cnt">301</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇦🇺</span> Avustralya <span class="cat-cnt">267</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇬🇷</span> Yunanistan <span class="cat-cnt">193</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇳🇴</span> Norveç <span class="cat-cnt">156</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇨🇦</span> Kanada <span class="cat-cnt">341</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇳🇿</span> Yeni Zelanda <span class="cat-cnt">124</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇧🇷</span> Brezilya <span class="cat-cnt">218</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇦🇪</span> BAE <span class="cat-cnt">98</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇰🇷</span> Güney Kore <span class="cat-cnt">147</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇮🇩</span> Endonezya <span class="cat-cnt">203</span></a>
+      <a href="#" class="country-chip"><span class="flag">🇿🇦</span> G. Afrika <span class="cat-cnt">89</span></a>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div>
+      <div class="foot-logo">🌐 LiveWorld</div>
+      <div>© 2025 LiveWorld – Dünyayı gerçek zamanlı keşfet</div>
+    </div>
+    <div class="foot-links">
+      <a href="#">Hakkında</a>
+      <a href="#">Gizlilik</a>
+      <a href="#">İletişim</a>
+      <a href="#">API</a>
+    </div>
+  </footer>
+</div>
+
+<!-- ═══════ MAP PAGE ═══════ -->
+<div id="page-map" class="page">
+  <div class="map-header">
+    <button onclick="showPage('home')" style="background:var(--input-bg);border:1px solid var(--border2);color:var(--text);padding:6px 12px;border-radius:8px;font-size:0.82rem;">← Geri</button>
+    <h2>🗺 Dünya Kamera Haritası</h2>
+    <span style="color:var(--muted);font-size:0.78rem;">Haritada noktaları tıklayın</span>
+  </div>
+  <div id="leaflet-map"></div>
+</div>
+
+<!-- ═══════ VIDEO MODAL ═══════ -->
+<div class="overlay" id="vid-overlay" onclick="closeVidOverlay(event)">
+  <div class="vid-modal">
+    <div class="vid-screen">
+      <img id="vid-bg" src="" alt="">
+      <div class="vid-live-badge"><span class="dot-live"></span> CANLI</div>
+      <div class="vid-center">
+        <div class="v-icon">📡</div>
+        <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;color:#fff" id="vid-modal-title"></div>
+        <p>Canlı yayın yükleniyor...<br><span style="font-size:0.75rem">Gerçek uygulamada HLS/WebRTC stream burada olur</span></p>
+      </div>
+    </div>
+    <div class="vid-info">
+      <div>
+        <div class="vid-title" id="vid-title"></div>
+        <div class="vid-meta">
+          <span id="vid-loc"></span>
+          <span>👁 <span id="vid-views"></span> izleyici</span>
+        </div>
+      </div>
+      <div class="vid-actions">
+        <span class="badge b-live" style="padding:6px 12px;border-radius:8px"><span class="dot-live"></span> CANLI</span>
+        <button class="btn-heart" onclick="toggleHeart(this)" style="border-radius:9px;background:var(--input-bg);border:1px solid var(--border2);color:var(--text)">♡</button>
+        <button class="vid-close" onclick="document.getElementById('vid-overlay').classList.remove('open')">✕ Kapat</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ AUTH MODAL ═══════ -->
+<div class="overlay" id="auth-overlay" onclick="closeAuthOverlay(event)">
+  <div class="auth-modal">
+    <button class="auth-close" onclick="document.getElementById('auth-overlay').classList.remove('open')">✕</button>
+    <div class="auth-logo">
+      <div class="logo-icon" style="background:linear-gradient(135deg,#3b82f6,#06b6d4)">🌐</div>
+      <h2>LiveWorld</h2>
+      <p id="auth-subtitle">Hesabına giriş yap</p>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Giriş Yap</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Kayıt Ol</button>
     </div>
 
-    <!-- HARİTA -->
-    <div id="map"></div>
-
-    <!-- Snapshot Preview (Hover için) -->
-    <div class="snapshot-preview" id="snapshot-preview">
-        <div class="loading">Yükleniyor...</div>
+    <!-- Login Form -->
+    <div id="form-login" class="auth-form">
+      <div class="form-group">
+        <label>E-posta</label>
+        <input class="form-input" type="email" placeholder="ornek@email.com">
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input class="form-input" type="password" placeholder="••••••••">
+      </div>
+      <button class="auth-btn" onclick="fakeLogin()">Giriş Yap</button>
+      <div class="auth-sep">ya da</div>
+      <div class="social-btns">
+        <button class="social-btn">🌐 Google</button>
+        <button class="social-btn">📘 Facebook</button>
+      </div>
     </div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-            crossorigin=""></script>
-    
-    <!-- Supabase JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Signup Form -->
+    <div id="form-signup" class="auth-form" style="display:none">
+      <div class="form-group">
+        <label>Ad Soyad</label>
+        <input class="form-input" type="text" placeholder="Adınız">
+      </div>
+      <div class="form-group">
+        <label>E-posta</label>
+        <input class="form-input" type="email" placeholder="ornek@email.com">
+      </div>
+      <div class="form-group">
+        <label>Şifre</label>
+        <input class="form-input" type="password" placeholder="En az 8 karakter">
+      </div>
+      <button class="auth-btn" onclick="fakeLogin()">Kayıt Ol</button>
+      <div class="auth-sep">ya da</div>
+      <div class="social-btns">
+        <button class="social-btn">🌐 Google</button>
+        <button class="social-btn">📘 Facebook</button>
+      </div>
+    </div>
+  </div>
+</div>
 
-    <script>
-        // ========================================
-        // 1. ŞİFRE KORUMASI
-        // ========================================
-        const CORRECT_PASSWORD = "beta2025";
+<script>
+/* ═══════ DATA ═══════ */
+const allCams = [
+  { id:1, name:"İstanbul Boğazı Panorama", loc:"📍 Türkiye", views:"1.248", img:"https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?w=600&q=80", cat:"city", is4k:true, lat:41.01, lng:29.00 },
+  { id:2, name:"Kapadokya Balonları", loc:"📍 Türkiye", views:"83", img:"https://images.unsplash.com/photo-1543832923-44667a44c804?w=500&q=80", cat:"nature", is4k:true, lat:38.65, lng:34.83 },
+  { id:3, name:"Times Square NYC", loc:"📍 ABD", views:"342", img:"https://images.unsplash.com/photo-1546436836-07a91091f160?w=500&q=80", cat:"city", is4k:true, lat:40.76, lng:-73.98 },
+  { id:4, name:"Santorini Günbatımı", loc:"📍 Yunanistan", views:"127", img:"https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=500&q=80", cat:"beach", is4k:false, lat:36.46, lng:25.37 },
+  { id:5, name:"Tokyo Shibuya Kavşağı", loc:"📍 Japonya", views:"512", img:"https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=500&q=80", cat:"city", is4k:true, lat:35.66, lng:139.70 },
+  { id:6, name:"Maldivler Kristal Plajı", loc:"📍 Maldivler", views:"218", img:"https://images.unsplash.com/photo-1573843981267-be1999ff37cd?w=500&q=80", cat:"beach", is4k:true, lat:3.20, lng:73.22 },
+  { id:7, name:"Eyfel Kulesi Paris", loc:"📍 Fransa", views:"876", img:"https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=500&q=80", cat:"city", is4k:false, lat:48.86, lng:2.29 },
+  { id:8, name:"Amalfi Sahili", loc:"📍 İtalya", views:"445", img:"https://images.unsplash.com/photo-1533105079780-92b9be482077?w=500&q=80", cat:"beach", is4k:true, lat:40.63, lng:14.60 },
+  { id:9, name:"Niagara Şelalesi", loc:"📍 Kanada", views:"1.032", img:"https://images.unsplash.com/photo-1489447068241-b3490214e879?w=500&q=80", cat:"nature", is4k:false, lat:43.08, lng:-79.07 },
+  { id:10, name:"Dubai Skyline – Burj Khalifa", loc:"📍 BAE", views:"728", img:"https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=500&q=80", cat:"city", is4k:true, lat:25.20, lng:55.27 },
+  { id:11, name:"Bali – Pirinç Tarlaları", loc:"📍 Endonezya", views:"291", img:"https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=500&q=80", cat:"nature", is4k:false, lat:-8.34, lng:115.09 },
+  { id:12, name:"Kuzey Işıkları – Norveç", loc:"📍 Norveç", views:"2.104", img:"https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=500&q=80", cat:"nature", is4k:true, lat:69.65, lng:18.96 },
+  { id:13, name:"Serengeti Safari", loc:"📍 Tanzanya", views:"893", img:"https://images.unsplash.com/photo-1516426122078-c23e76319801?w=500&q=80", cat:"nature", is4k:false, lat:-2.33, lng:34.83 },
+  { id:14, name:"Sydney Opera House", loc:"📍 Avustralya", views:"564", img:"https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?w=500&q=80", cat:"city", is4k:true, lat:-33.86, lng:151.21 },
+  { id:15, name:"Grand Canyon Panorama", loc:"📍 ABD", views:"1.347", img:"https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=500&q=80", cat:"nature", is4k:false, lat:36.10, lng:-112.09 },
+  { id:16, name:"Atatürk Havalimanı", loc:"📍 Türkiye", views:"67", img:"https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=500&q=80", cat:"airport", is4k:true, lat:40.98, lng:28.82 },
+];
 
-        function checkPassword() {
-            const input = document.getElementById('password-input');
-            const errorMsg = document.getElementById('error-msg');
-            const passwordScreen = document.getElementById('password-screen');
-            
-            if (input.value === CORRECT_PASSWORD) {
-                passwordScreen.style.display = 'none';
-                sessionStorage.setItem('authenticated', 'true');
-            } else {
-                errorMsg.style.display = 'block';
-                input.value = '';
-                input.focus();
-                setTimeout(() => {
-                    errorMsg.style.display = 'none';
-                }, 3000);
-            }
-        }
+const heroData = [
+  allCams[0], allCams[11], allCams[14]
+];
 
-        document.getElementById('password-input').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                checkPassword();
-            }
-        });
+let currentHero = 0;
+let currentCat = "all";
+let mapInitialized = false;
 
-        window.addEventListener('load', function() {
-            if (sessionStorage.getItem('authenticated') === 'true') {
-                document.getElementById('password-screen').style.display = 'none';
-            } else {
-                document.getElementById('password-input').focus();
-            }
-        });
+/* ═══════ HERO ═══════ */
+function renderHero(idx) {
+  const d = heroData[idx];
+  document.getElementById('hero-img').src = d.img;
+  document.getElementById('hero-title').textContent = d.name;
+  document.getElementById('hero-loc').textContent = d.loc;
+  document.getElementById('hero-views').textContent = '👁 ' + d.views;
+  // dots
+  const dots = document.getElementById('hero-dots');
+  dots.innerHTML = heroData.map((_, i) =>
+    `<div class="hdot ${i===idx?'active':''}" onclick="event.stopPropagation();switchHero(${i})"></div>`
+  ).join('');
+}
 
-        // ========================================
-        // 2. SUPABASE
-        // ========================================
-        const SUPABASE_URL = 'https://egrvojzmrykairbglqjq.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVncnZvanptcnlrYWlyYmdscWpxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg3MDgyNDcsImV4cCI6MjA4NDI4NDI0N30.sbIKNJcVlEGlVOgb_gBagP-Nn1NtBMKOlRzJmhH5TSM';
+function switchHero(idx) {
+  currentHero = idx;
+  renderHero(idx);
+}
 
-        const { createClient } = supabase;
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+// Auto slide
+setInterval(() => switchHero((currentHero + 1) % heroData.length), 5000);
 
-        // ========================================
-        // 3. HARİTA AYARLARI
-        // ========================================
-        var map = L.map('map').setView([39.0, 35.0], 6);
+/* ═══════ MINI GRID ═══════ */
+function renderMiniGrid() {
+  const featured = allCams.slice(1, 7);
+  document.getElementById('mini-grid').innerHTML = featured.map(c => `
+    <div class="mini-card" onclick="openVideo(allCams[${c.id-1}])">
+      <img src="${c.img}" alt="">
+      <div class="mini-grad"></div>
+      <div class="mini-badges">
+        <span class="badge b-live"><span class="dot-live"></span> CANLI</span>
+        ${c.is4k ? '<span class="badge b-4k">4K</span>' : ''}
+      </div>
+      <div class="mini-viewers"><span class="badge b-views">👁 ${c.views}</span></div>
+      <div class="mini-info">
+        <div class="mini-name">${c.name}</div>
+        <div class="mini-loc">${c.loc}</div>
+      </div>
+    </div>
+  `).join('');
+}
 
-        // HARITA TARZINI BURADAN SEÇİN (1-6 arası sayı yazın):
-        const HARITA_TARZI = 1; // <-- SADECE BU SAYIYI DEĞİŞTİRİN!
+/* ═══════ CAMS GRID ═══════ */
+function renderCams(filter = "all", search = "") {
+  const grid = document.getElementById('cams-grid');
+  let filtered = allCams.filter(c => {
+    const matchCat = filter === "all" || c.cat === filter;
+    const matchSearch = c.name.toLowerCase().includes(search.toLowerCase()) || c.loc.toLowerCase().includes(search.toLowerCase());
+    return matchCat && matchSearch;
+  });
+  if (!filtered.length) {
+    grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted)">Sonuç bulunamadı 😕</div>`;
+    return;
+  }
+  grid.innerHTML = filtered.map(c => `
+    <div class="cam-card" onclick="openVideo(allCams[${c.id-1}])">
+      <div class="cam-thumb">
+        <img src="${c.img}" alt="">
+        <div class="thumb-grad"></div>
+        <div class="thumb-top">
+          <span class="badge b-live"><span class="dot-live"></span> CANLI</span>
+          ${c.is4k ? '<span class="badge b-4k">4K</span>' : ''}
+        </div>
+        <div class="thumb-tr"><span class="badge b-views">👁 ${c.views}</span></div>
+        <div class="play-btn">▶</div>
+      </div>
+      <div class="cam-body">
+        <div class="cam-name">${c.name}</div>
+        <div class="cam-foot">
+          <div class="cam-loc">${c.loc}</div>
+          <div class="cam-views">🎥 ${c.is4k ? '4K' : 'HD'}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
 
-        const haritaTarzlari = {
-            1: { // Açık (Klasik OSM)
-                url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                attr: '&copy; OpenStreetMap'
-            },
-            2: { // Orta Gri (CartoDB Voyager)
-                url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-                attr: '&copy; OpenStreetMap &copy; CARTO'
-            },
-            3: { // Koyu Gri (CartoDB Dark)
-                url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                attr: '&copy; OpenStreetMap &copy; CARTO'
-            },
-            4: { // Minimal Açık
-                url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-                attr: '&copy; OpenStreetMap &copy; CARTO'
-            },
-            5: { // Uydu Görünümü
-                url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                attr: '&copy; Esri'
-            },
-            6: { // Topografik
-                url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
-                attr: '&copy; OpenTopoMap'
-            }
-        };
+/* ═══════ FILTER ═══════ */
+document.getElementById('cats').addEventListener('click', e => {
+  const pill = e.target.closest('.cat-pill');
+  if (!pill) return;
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  pill.classList.add('active');
+  currentCat = pill.dataset.cat;
+  renderCams(currentCat, document.getElementById('search-input').value);
+});
 
-        const seciliTarz = haritaTarzlari[HARITA_TARZI] || haritaTarzlari[1];
-        L.tileLayer(seciliTarz.url, {
-            attribution: seciliTarz.attr,
-            subdomains: 'abcd',
-            maxZoom: 19
-        }).addTo(map);
+function filterCams(val) {
+  renderCams(currentCat, val);
+}
 
-        // ========================================
-        // 4. KAMERALARI YÜKLE + HOVER SNAPSHOT
-        // ========================================
-        const snapshotPreview = document.getElementById('snapshot-preview');
-        let hoverTimeout;
+/* ═══════ PAGES ═══════ */
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-links a').forEach(a => a.classList.remove('active'));
+  if (name === 'map') {
+    document.querySelectorAll('.nav-links a')[3].classList.add('active');
+    initMap();
+  } else {
+    document.querySelectorAll('.nav-links a')[0].classList.add('active');
+  }
+  window.scrollTo(0,0);
+}
 
-        function showSnapshotPreview(e, imgUrl) {
-            if (!imgUrl) return;
-            
-            clearTimeout(hoverTimeout);
-            
-            hoverTimeout = setTimeout(() => {
-                snapshotPreview.innerHTML = `<img src="${imgUrl}" onerror="this.parentElement.innerHTML='<div class=loading>Görsel yüklenemedi</div>'">`;
-                snapshotPreview.style.display = 'block';
-                updatePreviewPosition(e);
-            }, 500); // 0.5 saniye bekle
-        }
+/* ═══════ MAP ═══════ */
+function initMap() {
+  if (mapInitialized) return;
+  mapInitialized = true;
+  const isDark = document.documentElement.dataset.theme === 'dark';
+  const tileUrl = isDark
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png';
+  const map = L.map('leaflet-map', { zoomControl: true }).setView([20, 10], 2);
+  L.tileLayer(tileUrl, { attribution: '© CartoDB' }).addTo(map);
 
-        function hideSnapshotPreview() {
-            clearTimeout(hoverTimeout);
-            snapshotPreview.style.display = 'none';
-        }
+  const icon = L.divIcon({
+    className: '',
+    html: `<div style="width:14px;height:14px;border-radius:50%;background:#ef4444;border:2px solid #fff;box-shadow:0 0 8px rgba(239,68,68,0.7)"></div>`,
+    iconSize: [14, 14], iconAnchor: [7, 7]
+  });
 
-        function updatePreviewPosition(e) {
-            const x = e.clientX + 20;
-            const y = e.clientY + 20;
-            const maxX = window.innerWidth - 320;
-            const maxY = window.innerHeight - 220;
-            
-            snapshotPreview.style.left = Math.min(x, maxX) + 'px';
-            snapshotPreview.style.top = Math.min(y, maxY) + 'px';
-        }
+  allCams.forEach(c => {
+    const popup = `
+      <div style="padding:4px">
+        <div class="map-popup-title">${c.name}</div>
+        <div class="map-popup-loc">${c.loc}</div>
+        <button class="map-popup-btn" onclick="openVideo(allCams[${c.id-1}]);return false;">▶ İzle</button>
+      </div>`;
+    L.marker([c.lat, c.lng], { icon }).addTo(map).bindPopup(popup);
+  });
+}
 
-        document.addEventListener('mousemove', (e) => {
-            if (snapshotPreview.style.display === 'block') {
-                updatePreviewPosition(e);
-            }
-        });
+/* ═══════ VIDEO MODAL ═══════ */
+function openVideo(cam) {
+  document.getElementById('vid-bg').src = cam.img;
+  document.getElementById('vid-modal-title').textContent = cam.name;
+  document.getElementById('vid-title').textContent = cam.name;
+  document.getElementById('vid-loc').textContent = cam.loc;
+  document.getElementById('vid-views').textContent = cam.views;
+  document.getElementById('vid-overlay').classList.add('open');
+}
+function closeVidOverlay(e) {
+  if (e.target === document.getElementById('vid-overlay'))
+    document.getElementById('vid-overlay').classList.remove('open');
+}
 
-        async function verileriYukle() {
-            try {
-                const { data, error } = await supabaseClient
-                    .from('Kameralar')
-                    .select('*');
-                
-                if (error) {
-                    console.error("Supabase Hatası:", error.message);
-                    return;
-                }
+/* ═══════ AUTH ═══════ */
+function openAuth(tab) {
+  document.getElementById('auth-overlay').classList.add('open');
+  switchTab(tab);
+}
+function closeAuthOverlay(e) {
+  if (e.target === document.getElementById('auth-overlay'))
+    document.getElementById('auth-overlay').classList.remove('open');
+}
+function switchTab(tab) {
+  const isLogin = tab === 'login';
+  document.getElementById('tab-login').classList.toggle('active', isLogin);
+  document.getElementById('tab-signup').classList.toggle('active', !isLogin);
+  document.getElementById('form-login').style.display = isLogin ? 'flex' : 'none';
+  document.getElementById('form-signup').style.display = isLogin ? 'none' : 'flex';
+  document.getElementById('auth-subtitle').textContent = isLogin ? 'Hesabına giriş yap' : 'Yeni hesap oluştur';
+}
+function fakeLogin() {
+  document.getElementById('auth-overlay').classList.remove('open');
+  alert('✅ Başarıyla giriş yapıldı! (Demo)');
+}
 
-                if (data && data.length > 0) {
-                    console.log(`✅ ${data.length} kamera yüklendi`);
-                    
-                    data.forEach(kamera => {
-                        const ad = kamera['kamera adı'] || 'İsimsiz Kamera';
-                        const lat = kamera['Enlem - koordinat için'];
-                        const lng = kamera['Boylam - koordinat için'];
-                        const img = kamera['snapshot_url'];
-                        const stream = kamera['stream_url'];
+/* ═══════ THEME ═══════ */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  const icon = document.getElementById('theme-icon');
+  icon.style.transform = 'rotate(360deg) scale(1.3)';
+  icon.textContent = isDark ? '☀️' : '🌙';
+  setTimeout(() => icon.style.transform = '', 400);
+}
 
-                        if (lat && lng) {
-                            const blueIcon = L.icon({
-                                iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
-                                shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-                                iconSize: [25, 41],
-                                iconAnchor: [12, 41],
-                                popupAnchor: [1, -34],
-                                shadowSize: [41, 41]
-                            });
+/* ═══════ HEART ═══════ */
+function toggleHeart(btn) {
+  const liked = btn.classList.toggle('liked');
+  btn.textContent = liked ? '♥' : '♡';
+  if (liked) { btn.style.transform = 'scale(1.3)'; setTimeout(() => btn.style.transform = '', 200); }
+}
 
-                            const marker = L.marker([lat, lng], { icon: blueIcon })
-                                .addTo(map)
-                                .bindPopup(`
-                                    <div style="min-width: 200px;">
-                                        <b style="font-size: 16px;">${ad}</b><br>
-                                        ${img ? `<img src="${img}" width="200" style="margin: 10px 0; border-radius: 8px;" onerror="this.src='https://via.placeholder.com/200x150?text=Gorsel+Yok'">` : ''}
-                                        <br>
-                                        ${stream ? `<a href="${stream}" target="_blank">🎥 Canlı İzle</a>` : '<span style="color: #999;">Canlı yayın yok</span>'}
-                                    </div>
-                                `);
+/* ═══════ MOBILE DRAWER ═══════ */
+function toggleDrawer() {
+  const d = document.getElementById('mobile-drawer');
+  d.classList.toggle('open');
+}
 
-                            // HOVER SNAPSHOT ÖZELLİĞİ
-                            marker.on('mouseover', function(e) {
-                                showSnapshotPreview(e.originalEvent, img);
-                            });
+/* ═══════ STAT COUNT ANIMATION ═══════ */
+function animateStats() {
+  document.querySelectorAll('.stat-val[data-target]').forEach(el => {
+    const target = parseInt(el.dataset.target);
+    let current = 0;
+    const step = Math.ceil(target / 60);
+    const timer = setInterval(() => {
+      current = Math.min(current + step, target);
+      el.textContent = current.toLocaleString('tr-TR');
+      if (current >= target) clearInterval(timer);
+    }, 20);
+  });
+}
 
-                            marker.on('mouseout', function() {
-                                hideSnapshotPreview();
-                            });
-                        }
-                    });
-                }
-            } catch (err) {
-                console.error("Hata:", err);
-            }
-        }
-
-        const checkAndLoad = setInterval(() => {
-            if (sessionStorage.getItem('authenticated') === 'true') {
-                verileriYukle();
-                clearInterval(checkAndLoad);
-            }
-        }, 100);
-    </script>
+/* ═══════ INIT ═══════ */
+renderHero(0);
+renderMiniGrid();
+renderCams();
+setTimeout(animateStats, 400);
+</script>
 </body>
 </html>
